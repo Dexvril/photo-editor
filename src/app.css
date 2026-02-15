@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+
+@theme {
+	--color-editor-bg: #1a1a2e;
+	--color-editor-surface: #16213e;
+	--color-editor-panel: #0f3460;
+	--color-editor-accent: #e94560;
+	--color-editor-text: #eaeaea;
+	--color-editor-muted: #a0a0b0;
+	--color-editor-border: #2a2a4a;
+	--color-editor-hover: #1a3a6a;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+	background: var(--color-editor-bg);
+	color: var(--color-editor-text);
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+input[type="range"] {
+	-webkit-appearance: none;
+	appearance: none;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--color-editor-border);
+	outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--color-editor-accent);
+	cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--color-editor-accent);
+	cursor: pointer;
+	border: none;
+}
+
+::-webkit-scrollbar {
+	width: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--color-editor-border);
+	border-radius: 3px;
+}
