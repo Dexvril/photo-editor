@@ -1,6 +1,8 @@
 <script>
 	import { activeTool } from '$lib/stores/editor.js';
 
+	let { isMobile = false } = $props();
+
 	const tools = [
 		{ id: 'adjust', label: 'Adjust', icon: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z' },
 		{ id: 'crop', label: 'Crop', icon: 'M7 3v4m0 0H3m4 0h10a2 2 0 012 2v10m0 0v4m0-4h4m-4 0H7a2 2 0 01-2-2V7' },
@@ -14,21 +16,41 @@
 	];
 </script>
 
-<div class="w-[72px] bg-editor-surface border-r border-editor-border flex flex-col py-2 shrink-0 overflow-y-auto">
-	{#each tools as tool}
-		<button
-			class="sidebar-btn"
-			class:active={$activeTool === tool.id}
-			onclick={() => activeTool.set(tool.id)}
-			title={tool.label}
-		>
-			<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-				<path stroke-linecap="round" stroke-linejoin="round" d={tool.icon} />
-			</svg>
-			<span class="text-[10px]">{tool.label}</span>
-		</button>
-	{/each}
-</div>
+{#if isMobile}
+	<div class="mobile-sidebar">
+		<div class="mobile-sidebar-scroll">
+			{#each tools as tool}
+				<button
+					class="sidebar-btn-mobile"
+					class:active={$activeTool === tool.id}
+					onclick={() => activeTool.set(tool.id)}
+					title={tool.label}
+				>
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+						<path stroke-linecap="round" stroke-linejoin="round" d={tool.icon} />
+					</svg>
+					<span class="text-[9px]">{tool.label}</span>
+				</button>
+			{/each}
+		</div>
+	</div>
+{:else}
+	<div class="w-[72px] bg-editor-surface border-r border-editor-border flex flex-col py-2 shrink-0 overflow-y-auto">
+		{#each tools as tool}
+			<button
+				class="sidebar-btn"
+				class:active={$activeTool === tool.id}
+				onclick={() => activeTool.set(tool.id)}
+				title={tool.label}
+			>
+				<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+					<path stroke-linecap="round" stroke-linejoin="round" d={tool.icon} />
+				</svg>
+				<span class="text-[10px]">{tool.label}</span>
+			</button>
+		{/each}
+	</div>
+{/if}
 
 <style>
 	.sidebar-btn {
@@ -50,6 +72,46 @@
 		background: var(--color-editor-panel);
 	}
 	.sidebar-btn.active {
+		color: var(--color-editor-accent);
+		background: var(--color-editor-panel);
+	}
+
+	.mobile-sidebar {
+		background: var(--color-editor-surface);
+		border-top: 1px solid var(--color-editor-border);
+		flex-shrink: 0;
+		z-index: 10;
+	}
+	.mobile-sidebar-scroll {
+		display: flex;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		padding: 0.25rem 0.5rem;
+		gap: 2px;
+		scrollbar-width: none;
+	}
+	.mobile-sidebar-scroll::-webkit-scrollbar { display: none; }
+
+	.sidebar-btn-mobile {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1px;
+		padding: 0.375rem 0.5rem;
+		border-radius: 0.375rem;
+		color: var(--color-editor-muted);
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		transition: all 0.15s;
+		flex-shrink: 0;
+		min-width: 48px;
+	}
+	.sidebar-btn-mobile:active {
+		color: var(--color-editor-text);
+		background: var(--color-editor-panel);
+	}
+	.sidebar-btn-mobile.active {
 		color: var(--color-editor-accent);
 		background: var(--color-editor-panel);
 	}

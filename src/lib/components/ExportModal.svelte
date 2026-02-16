@@ -88,8 +88,16 @@
 		border: 1px solid var(--color-editor-border);
 		border-radius: 0.5rem;
 		padding: 1.5rem;
-		min-width: 320px;
-		max-width: 400px;
+		min-width: min(320px, 90vw);
+		max-width: min(400px, 95vw);
+		width: 90vw;
+		max-height: 90vh;
+		overflow-y: auto;
+	}
+	@media (min-width: 768px) {
+		.modal {
+			width: auto;
+		}
 	}
 	.close-btn {
 		background: none;

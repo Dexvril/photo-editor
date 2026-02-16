@@ -29,6 +29,16 @@
 	let mainCanvas = $state();
 	let showExport = $state(false);
 	let sourceImageData = $state(null);
+	let isMobile = $state(false);
+	let mobilePanel = $state(null); // null | 'tools' | 'layers'
+
+	function updateIsMobile() {
+		isMobile = window.innerWidth < 768;
+	}
+
+	onMount(() => {
+		updateIsMobile();
+	});
 
 	// Debounce timer for live preview
 	let renderTimer;
@@ -351,7 +361,7 @@
 	});
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} onresize={updateIsMobile} />
 
 <div
 	class="flex flex-col h-full"
@@ -366,61 +376,136 @@
 		onundo={handleUndo}
 		onredo={handleRedo}
 		onexport={() => showExport = true}
+		{isMobile}
 	/>
 
-	<div class="flex flex-1 min-h-0">
-		<Sidebar />
+	{#if isMobile}
+		<!-- Mobile Layout -->
+		<div class="flex flex-col flex-1 min-h-0 relative">
+			<Canvas bind:canvas={mainCanvas} />
 
-		<Canvas bind:canvas={mainCanvas} />
+			<!-- Mobile panel drawer toggle -->
+			<button
+				class="mobile-panel-toggle"
+				onclick={() => mobilePanel = mobilePanel ? null : 'tools'}
+			>
+				<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+				</svg>
+				{mobilePanel ? 'Close' : 'Settings'}
+			</button>
 
-		<!-- Right Panel -->
-		<div class="w-[260px] bg-editor-surface border-l border-editor-border flex flex-col shrink-0">
-			<!-- Tool Panel -->
-			<div class="flex-1 overflow-y-auto min-h-0">
-				{#if $activeTool === 'adjust'}
-					<AdjustPanel />
-				{:else if $activeTool === 'crop'}
-					<CropPanel
-						onapply={handleCropApply}
-						onrotate={handleRotate}
-						onflip={handleFlip}
-					/>
-				{:else if $activeTool === 'text'}
-					<TextPanel />
-				{:else if $activeTool === 'filter'}
-					<FilterPanel />
-				{:else if $activeTool === 'hsl'}
-					<HSLPanel />
-				{:else if $activeTool === 'colorbalance'}
-					<ColorBalancePanel />
-				{:else if $activeTool === 'curves'}
-					<CurvesPanel />
-				{:else if $activeTool === 'colorreplace'}
-					<ColorReplacePanel />
-				{:else if $activeTool === 'stickers'}
-					<StickerPanel />
-				{/if}
-			</div>
-			<!-- Layer Panel (always visible) -->
-			<div class="border-t border-editor-border overflow-y-auto" style="max-height: 45%;">
-				<LayerPanel onaddimage={addImageAsLayer} />
+			<!-- Mobile slide-up drawer -->
+			{#if mobilePanel}
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="mobile-drawer-overlay" onclick={() => mobilePanel = null} onkeydown={() => {}}>
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div class="mobile-drawer" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
+						<div class="mobile-drawer-handle"></div>
+						<div class="mobile-drawer-tabs">
+							<button
+								class="mobile-tab"
+								class:active={mobilePanel === 'tools'}
+								onclick={() => mobilePanel = 'tools'}
+							>Tools</button>
+							<button
+								class="mobile-tab"
+								class:active={mobilePanel === 'layers'}
+								onclick={() => mobilePanel = 'layers'}
+							>Layers</button>
+						</div>
+						<div class="mobile-drawer-content">
+							{#if mobilePanel === 'tools'}
+								{#if $activeTool === 'adjust'}
+									<AdjustPanel />
+								{:else if $activeTool === 'crop'}
+									<CropPanel
+										onapply={handleCropApply}
+										onrotate={handleRotate}
+										onflip={handleFlip}
+									/>
+								{:else if $activeTool === 'text'}
+									<TextPanel />
+								{:else if $activeTool === 'filter'}
+									<FilterPanel />
+								{:else if $activeTool === 'hsl'}
+									<HSLPanel />
+								{:else if $activeTool === 'colorbalance'}
+									<ColorBalancePanel />
+								{:else if $activeTool === 'curves'}
+									<CurvesPanel />
+								{:else if $activeTool === 'colorreplace'}
+									<ColorReplacePanel />
+								{:else if $activeTool === 'stickers'}
+									<StickerPanel />
+								{/if}
+							{:else if mobilePanel === 'layers'}
+								<LayerPanel onaddimage={addImageAsLayer} />
+							{/if}
+						</div>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Mobile bottom sidebar (horizontal tools) -->
+			<Sidebar {isMobile} />
+		</div>
+	{:else}
+		<!-- Desktop Layout -->
+		<div class="flex flex-1 min-h-0">
+			<Sidebar />
+
+			<Canvas bind:canvas={mainCanvas} />
+
+			<!-- Right Panel -->
+			<div class="w-[260px] bg-editor-surface border-l border-editor-border flex flex-col shrink-0">
+				<!-- Tool Panel -->
+				<div class="flex-1 overflow-y-auto min-h-0">
+					{#if $activeTool === 'adjust'}
+						<AdjustPanel />
+					{:else if $activeTool === 'crop'}
+						<CropPanel
+							onapply={handleCropApply}
+							onrotate={handleRotate}
+							onflip={handleFlip}
+						/>
+					{:else if $activeTool === 'text'}
+						<TextPanel />
+					{:else if $activeTool === 'filter'}
+						<FilterPanel />
+					{:else if $activeTool === 'hsl'}
+						<HSLPanel />
+					{:else if $activeTool === 'colorbalance'}
+						<ColorBalancePanel />
+					{:else if $activeTool === 'curves'}
+						<CurvesPanel />
+					{:else if $activeTool === 'colorreplace'}
+						<ColorReplacePanel />
+					{:else if $activeTool === 'stickers'}
+						<StickerPanel />
+					{/if}
+				</div>
+				<!-- Layer Panel (always visible) -->
+				<div class="border-t border-editor-border overflow-y-auto" style="max-height: 45%;">
+					<LayerPanel onaddimage={addImageAsLayer} />
+				</div>
 			</div>
 		</div>
-	</div>
 
-	<!-- Status bar -->
-	<div class="flex items-center justify-between px-4 py-1 bg-editor-surface border-t border-editor-border text-xs text-editor-muted shrink-0">
-		<span>
-			{#if $originalImage}
-				{$imageInfo.width} &times; {$imageInfo.height}px
-			{:else}
-				No image loaded
-			{/if}
-		</span>
-		<span>Layers: {$layers.length}</span>
-		<span>Zoom: {Math.round($zoom * 100)}%</span>
-		<span>Ctrl+Z / Ctrl+Shift+Z: Undo/Redo &middot; Ctrl+E: Export</span>
-	</div>
+		<!-- Status bar -->
+		<div class="flex items-center justify-between px-4 py-1 bg-editor-surface border-t border-editor-border text-xs text-editor-muted shrink-0">
+			<span>
+				{#if $originalImage}
+					{$imageInfo.width} &times; {$imageInfo.height}px
+				{:else}
+					No image loaded
+				{/if}
+			</span>
+			<span>Layers: {$layers.length}</span>
+			<span>Zoom: {Math.round($zoom * 100)}%</span>
+			<span>Ctrl+Z / Ctrl+Shift+Z: Undo/Redo &middot; Ctrl+E: Export</span>
+		</div>
+	{/if}
 </div>
 
 {#if showExport}
@@ -429,3 +514,83 @@
 		onexport={handleExport}
 	/>
 {/if}
+
+<style>
+	.mobile-panel-toggle {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.375rem 0.75rem;
+		border-radius: 0.5rem;
+		font-size: 0.75rem;
+		background: var(--color-editor-surface);
+		color: var(--color-editor-text);
+		border: 1px solid var(--color-editor-border);
+		cursor: pointer;
+		opacity: 0.9;
+		backdrop-filter: blur(4px);
+	}
+	.mobile-panel-toggle:active { opacity: 1; background: var(--color-editor-hover); }
+
+	.mobile-drawer-overlay {
+		position: absolute;
+		inset: 0;
+		z-index: 30;
+		background: rgba(0,0,0,0.3);
+	}
+
+	.mobile-drawer {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		max-height: 60%;
+		background: var(--color-editor-surface);
+		border-top: 1px solid var(--color-editor-border);
+		border-radius: 1rem 1rem 0 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.mobile-drawer-handle {
+		width: 40px;
+		height: 4px;
+		border-radius: 2px;
+		background: var(--color-editor-border);
+		margin: 0.5rem auto;
+		flex-shrink: 0;
+	}
+
+	.mobile-drawer-tabs {
+		display: flex;
+		border-bottom: 1px solid var(--color-editor-border);
+		flex-shrink: 0;
+	}
+
+	.mobile-tab {
+		flex: 1;
+		padding: 0.5rem;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		background: none;
+		border: none;
+		color: var(--color-editor-muted);
+		cursor: pointer;
+		border-bottom: 2px solid transparent;
+	}
+	.mobile-tab.active {
+		color: var(--color-editor-accent);
+		border-bottom-color: var(--color-editor-accent);
+	}
+
+	.mobile-drawer-content {
+		flex: 1;
+		overflow-y: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+</style>

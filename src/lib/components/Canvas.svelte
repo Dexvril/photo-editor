@@ -278,6 +278,68 @@
 		layerInteraction = null;
 	}
 
+	// --- Touch support ---
+	let lastTouchDist = 0;
+	let lastTouchCenter = { x: 0, y: 0 };
+	let touchMode = null; // 'pan' | 'pinch' | null
+
+	function getTouchDist(touches) {
+		const dx = touches[0].clientX - touches[1].clientX;
+		const dy = touches[0].clientY - touches[1].clientY;
+		return Math.hypot(dx, dy);
+	}
+
+	function getTouchCenter(touches) {
+		return {
+			x: (touches[0].clientX + touches[1].clientX) / 2,
+			y: (touches[0].clientY + touches[1].clientY) / 2
+		};
+	}
+
+	function handleTouchStart(e) {
+		if (e.touches.length === 2) {
+			e.preventDefault();
+			touchMode = 'pinch';
+			lastTouchDist = getTouchDist(e.touches);
+			lastTouchCenter = getTouchCenter(e.touches);
+		} else if (e.touches.length === 1) {
+			touchMode = 'pan';
+			lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+			isPanning = true;
+		}
+	}
+
+	function handleTouchMove(e) {
+		if (touchMode === 'pinch' && e.touches.length === 2) {
+			e.preventDefault();
+			const dist = getTouchDist(e.touches);
+			const scale = dist / lastTouchDist;
+			zoom.update(z => Math.max(0.1, Math.min(5, z * scale)));
+			lastTouchDist = dist;
+
+			const center = getTouchCenter(e.touches);
+			const dx = center.x - lastTouchCenter.x;
+			const dy = center.y - lastTouchCenter.y;
+			panOffset.update(p => ({ x: p.x + dx, y: p.y + dy }));
+			lastTouchCenter = center;
+		} else if (touchMode === 'pan' && e.touches.length === 1) {
+			const dx = e.touches[0].clientX - lastMouse.x;
+			const dy = e.touches[0].clientY - lastMouse.y;
+			panOffset.update(p => ({ x: p.x + dx, y: p.y + dy }));
+			lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+		}
+	}
+
+	function handleTouchEnd(e) {
+		if (e.touches.length < 2) {
+			touchMode = null;
+		}
+		if (e.touches.length === 0) {
+			isPanning = false;
+			touchMode = null;
+		}
+	}
+
 	// Compute selection handles for the active image layer
 	const selectedImageLayer = $derived($layers.find(l => l.id === $activeLayerId && l.type === 'image' && l.visible));
 	const selectionBounds = $derived.by(() => {
@@ -310,8 +372,12 @@
 	onmousemove={handleMouseMove}
 	onmouseup={handleMouseUp}
 	onmouseleave={handleMouseUp}
+	ontouchstart={handleTouchStart}
+	ontouchmove={handleTouchMove}
+	ontouchend={handleTouchEnd}
 	role="application"
 	aria-label="Canvas area"
+	style="touch-action: none;"
 >
 	{#if $originalImage}
 		<div
